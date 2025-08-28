@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -8,8 +8,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Packer">
-    <link rel="apple-touch-icon" href="https://placehold.co/180x180/3498db/ffffff?text=P">
-    <link rel="icon" href="https://placehold.co/32x32/3498db/ffffff?text=P">
+    <link rel="apple-touch-icon" href="https://placehold.co/180x180/4f46e5/ffffff?text=P">
+    <link rel="icon" href="https://placehold.co/32x32/4f46e5/ffffff?text=P">
 
     <title>Packer</title>
 
@@ -25,57 +25,79 @@
     <style>
         :root { --sat: env(safe-area-inset-top); --sar: env(safe-area-inset-right); --sab: env(safe-area-inset-bottom); --sal: env(safe-area-inset-left); }
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        #app-container { padding-bottom: calc(5rem + var(--sab)); }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+        #app-container { padding-bottom: calc(6rem + var(--sab)); }
         #add-item-form-container { padding-bottom: calc(1rem + var(--sab)); }
-        .task-item:active { transform: scale(0.98); background-color: #f9fafb; }
+        .task-item { transition: background-color 0.2s, transform 0.2s; }
+        .task-item:active { transform: scale(0.98); @apply bg-gray-100 dark:bg-gray-700; }
+        .location-suggestion:active { @apply bg-indigo-700; }
+        .list-enter { opacity: 0; transform: translateY(10px); }
+        .list-enter-active { opacity: 1; transform: translateY(0); transition: opacity 300ms, transform 300ms; }
     </style>
+    <script>
+        // Set theme on initial load
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark')
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 antialiased">
 
     <!-- Splash/Loading Screen -->
-    <div id="loading-screen" class="fixed inset-0 bg-gray-50 flex flex-col items-center justify-center z-50 transition-opacity duration-500">
-        <div class="w-20 h-20 bg-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
+    <div id="loading-screen" class="fixed inset-0 bg-white dark:bg-gray-900 flex flex-col items-center justify-center z-50 transition-opacity duration-500">
+        <div class="w-20 h-20 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
             <span class="text-white text-4xl font-bold">P</span>
         </div>
-        <p id="loading-message" class="mt-4 text-gray-600 font-medium">Connecting to database...</p>
+        <p id="loading-message" class="mt-4 text-gray-600 dark:text-gray-400 font-medium">Connecting to database...</p>
     </div>
 
     <!-- Main App Container -->
     <main id="app-container" class="max-w-lg mx-auto h-screen flex flex-col opacity-0 transition-opacity duration-500">
-        <header class="p-4 flex justify-between items-center bg-gray-50/80 backdrop-blur-sm sticky top-0 z-10 border-b border-gray-200" style="padding-top: calc(1rem + var(--sat));">
-            <h1 class="text-2xl font-bold text-gray-900">Packing List</h1>
-            <button id="reset-list-btn" class="flex items-center gap-1 text-sm bg-red-500 text-white px-3 py-2 rounded-lg shadow active:bg-red-600 transition">
-                <span class="material-symbols-outlined" style="font-size: 18px;">restart_alt</span>
-                New Trip
-            </button>
+        <header class="p-4 flex justify-between items-center bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700" style="padding-top: calc(1rem + var(--sat));">
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Packing List</h1>
+            <div class="flex items-center space-x-2">
+                 <button id="theme-toggle-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition-colors">
+                    <span class="material-symbols-outlined text-gray-600 dark:text-gray-300"></span>
+                </button>
+                <button id="reset-list-btn" class="flex items-center gap-1 text-sm bg-red-600 text-white px-3 py-2 rounded-lg shadow active:bg-red-700 transition">
+                    <span class="material-symbols-outlined" style="font-size: 18px;">restart_alt</span>
+                    New Trip
+                </button>
+            </div>
         </header>
 
-        <div id="item-list" class="flex-grow overflow-y-auto px-4 pt-4 space-y-4">
+        <div id="item-list" class="flex-grow overflow-y-auto px-4 pt-4 space-y-6">
             <!-- Items grouped by location will be injected here -->
         </div>
     </main>
 
     <!-- Add Item Form -->
-    <div id="add-item-form-container" class="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-gray-50 p-4 border-t border-gray-200">
+    <div id="add-item-form-container" class="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white dark:bg-gray-900 p-4 border-t border-gray-200 dark:border-gray-700">
         <form id="add-item-form" class="flex items-center space-x-2">
-            <input type="text" id="item-input" placeholder="Add item (e.g., Toothbrush)" class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition" autocomplete="off">
-            <button type="submit" class="bg-blue-500 text-white p-3 rounded-full shadow-md hover:bg-blue-600 active:bg-blue-700 transform active:scale-95 transition">
+            <input type="text" id="item-input" placeholder="Add item (e.g., Toothbrush)" class="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition text-gray-900 dark:text-white" autocomplete="off">
+            <button type="submit" class="bg-indigo-600 text-white p-3 rounded-full shadow-md hover:bg-indigo-700 active:bg-indigo-800 transform active:scale-95 transition">
                 <span class="material-symbols-outlined">add</span>
             </button>
         </form>
     </div>
 
     <!-- Location Modal -->
-    <div id="location-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-40 hidden">
-        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm">
-            <h2 class="text-lg font-bold text-gray-900">Set Location</h2>
-            <p class="text-sm text-gray-600 mt-1">Where do you get "<span id="modal-item-name" class="font-semibold"></span>"?</p>
+    <div id="location-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-40 hidden backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-sm">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">Set Location</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Where do you get "<span id="modal-item-name" class="font-semibold"></span>"?</p>
+            
+            <div id="location-suggestions" class="flex flex-wrap gap-2 mt-4">
+                <!-- Location suggestions will be injected here -->
+            </div>
+            
             <form id="location-form">
-                <input type="text" id="location-input" placeholder="e.g., Upstairs Bathroom" class="w-full mt-4 px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <input type="text" id="location-input" placeholder="Or type a new location" class="w-full mt-4 px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-gray-900 dark:text-white">
                 <div class="flex justify-end space-x-2 mt-4">
-                    <button type="button" id="cancel-location-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button>
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600">Save</button>
+                    <button type="button" id="cancel-location-btn" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">Save</button>
                 </div>
             </form>
         </div>
@@ -85,16 +107,16 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot, query, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot, query, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         // --- PASTE YOUR FIREBASE CONFIG HERE ---
         const firebaseConfig = {
-          apiKey: "AIzaSyAFM9ZFOZWP_VP_73ci0B74VoumndJfBRw",
-          authDomain: "packing-helper-beb5e.firebaseapp.com",
-          projectId: "packing-helper-beb5e",
-          storageBucket: "packing-helper-beb5e.firebasestorage.app",
-          messagingSenderId: "853350644569",
-          appId: "1:853350644569:web:1b29746439551382766a48"
+            apiKey: "AIzaSyAFM9ZFOZWP_VP_73ci0B74VoumndJfBRw",
+            authDomain: "packing-helper-beb5e.firebaseapp.com",
+            projectId: "packing-helper-beb5e",
+            storageBucket: "packing-helper-beb5e.firebasestorage.app",
+            messagingSenderId: "853350644569",
+            appId: "1:853350644569:web:1b29746439551382766a48"
         };
         // -----------------------------------------
 
@@ -104,8 +126,8 @@
         const db = getFirestore(app);
         
         let userId;
-        let itemLocations = new Map(); // Master list: 'toothbrush' -> 'Bathroom'
-        let packingList = []; // Current trip list: [{ text: 'Toothbrush', location: 'Bathroom', packed: false }]
+        let itemLocations = new Map(); 
+        let packingList = [];
         let unsubItemLocations, unsubPackingList;
 
         const loadingScreen = document.getElementById('loading-screen');
@@ -115,12 +137,14 @@
         const addItemForm = document.getElementById('add-item-form');
         const itemInput = document.getElementById('item-input');
         const resetListBtn = document.getElementById('reset-list-btn');
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
         
         const locationModal = document.getElementById('location-modal');
         const locationForm = document.getElementById('location-form');
         const locationInput = document.getElementById('location-input');
         const cancelLocationBtn = document.getElementById('cancel-location-btn');
         const modalItemName = document.getElementById('modal-item-name');
+        const locationSuggestions = document.getElementById('location-suggestions');
         let pendingItem = null;
 
         // --- AUTHENTICATION ---
@@ -139,19 +163,14 @@
 
         // --- FIRESTORE LISTENERS ---
         function setupListeners() {
-            // Listener for the master item locations
             const itemLocationsRef = collection(db, `users/${userId}/itemLocations`);
             unsubItemLocations = onSnapshot(itemLocationsRef, (snapshot) => {
-                snapshot.docs.forEach(doc => {
-                    itemLocations.set(doc.id, doc.data().location);
-                });
-                // Once locations are loaded, load the packing list
+                snapshot.docs.forEach(doc => itemLocations.set(doc.id, doc.data().location));
                 if (!unsubPackingList) setupPackingListListener();
             });
         }
 
         function setupPackingListListener() {
-             // Listener for the current packing list
             const packingListRef = collection(db, `users/${userId}/packingList`);
             unsubPackingList = onSnapshot(query(packingListRef), (snapshot) => {
                 packingList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -163,15 +182,19 @@
         // --- RENDERING ---
         function renderPackingList() {
             itemListEl.innerHTML = '';
-            if (packingList.length === 0) {
-                itemListEl.innerHTML = `<div class="text-center py-16">
-                    <span class="material-symbols-outlined text-5xl text-gray-300">luggage</span>
-                    <p class="mt-2 text-gray-500">Your packing list is empty.</p>
+            const unpacked = packingList.filter(item => !item.packed);
+            const packed = packingList.filter(item => item.packed);
+
+            if (unpacked.length === 0 && packed.length === 0) {
+                itemListEl.innerHTML = `<div class="text-center py-16 text-gray-500 dark:text-gray-400">
+                    <span class="material-symbols-outlined text-6xl">luggage</span>
+                    <p class="mt-2">Your packing list is empty.</p>
                 </div>`;
                 return;
             }
 
-            const groupedByLocation = packingList.reduce((acc, item) => {
+            // Render unpacked items
+            const groupedByLocation = unpacked.reduce((acc, item) => {
                 const location = item.location || 'Uncategorized';
                 if (!acc[location]) acc[location] = [];
                 acc[location].push(item);
@@ -179,23 +202,50 @@
             }, {});
 
             const sortedLocations = Object.keys(groupedByLocation).sort();
-
             sortedLocations.forEach(location => {
-                const locationContainer = document.createElement('div');
-                locationContainer.innerHTML = `
-                    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2 px-1">${location}</h2>
-                    <div class="bg-white rounded-xl shadow-sm">
-                        ${groupedByLocation[location].map(createItemElement).join('')}
-                    </div>
-                `;
+                const locationContainer = createGroupContainer(location, groupedByLocation[location]);
                 itemListEl.appendChild(locationContainer);
+            });
+
+            // Render packed items
+            if (packed.length > 0) {
+                const packedContainer = createGroupContainer('Packed', packed, true);
+                itemListEl.appendChild(packedContainer);
+            }
+            
+            // Animate new items
+            document.querySelectorAll('.list-enter').forEach((el, index) => {
+                setTimeout(() => {
+                    el.classList.add('list-enter-active');
+                }, index * 30);
             });
         }
 
+        function createGroupContainer(title, items, isPacked = false) {
+            const container = document.createElement('div');
+            const itemsHtml = items.map(item => createItemElement(item)).join('');
+            const titleColor = isPacked ? 'text-green-500 dark:text-green-400' : 'text-gray-500 dark:text-gray-400';
+            const icon = isPacked ? 'task_alt' : 'pin_drop';
+
+            container.innerHTML = `
+                <h2 class="flex items-center text-sm font-semibold ${titleColor} uppercase tracking-wider mb-2 px-1">
+                    <span class="material-symbols-outlined mr-2" style="font-size: 16px;">${icon}</span>
+                    ${title}
+                </h2>
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+                    ${itemsHtml}
+                </div>
+            `;
+            return container;
+        }
+
         function createItemElement(item) {
-            return `<div class="task-item flex items-center p-3 border-b border-gray-200 last:border-b-0" data-id="${item.id}">
-                <input type="checkbox" ${item.packed ? 'checked' : ''} class="item-checkbox h-5 w-5 rounded-full border-gray-300 text-blue-500 focus:ring-blue-500 transition">
-                <p class="flex-grow ml-3 ${item.packed ? 'line-through text-gray-400' : 'text-gray-800'}">${item.text}</p>
+            const checked = item.packed ? 'checked' : '';
+            const textClass = item.packed ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-gray-200';
+            const checkboxClass = item.packed ? 'border-green-500 text-green-500' : 'border-gray-300 dark:border-gray-600 text-indigo-600';
+            return `<div class="task-item flex items-center p-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0 list-enter" data-id="${item.id}">
+                <input type="checkbox" ${checked} class="item-checkbox h-5 w-5 rounded-full ${checkboxClass} focus:ring-indigo-500 bg-transparent transition-colors">
+                <p class="flex-grow ml-3 ${textClass}">${item.text}</p>
             </div>`;
         }
 
@@ -222,9 +272,26 @@
             } else {
                 pendingItem = text;
                 modalItemName.textContent = text;
+                renderLocationSuggestions();
                 locationModal.classList.remove('hidden');
                 locationInput.focus();
             }
+        }
+
+        function renderLocationSuggestions() {
+            locationSuggestions.innerHTML = '';
+            const uniqueLocations = [...new Set(itemLocations.values())];
+            uniqueLocations.sort().forEach(loc => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = loc;
+                btn.className = 'location-suggestion px-3 py-1 bg-indigo-600 text-white text-sm rounded-full transition';
+                btn.onclick = () => {
+                    locationInput.value = loc;
+                    locationForm.requestSubmit(); // Submit the form
+                };
+                locationSuggestions.appendChild(btn);
+            });
         }
 
         async function handleLocationSubmit(e) {
@@ -233,26 +300,17 @@
             if (!location || !pendingItem) return;
 
             const normalizedText = pendingItem.toLowerCase();
-            
-            // Save to master list
             const itemLocationRef = doc(db, `users/${userId}/itemLocations`, normalizedText);
             await setDoc(itemLocationRef, { location });
-            itemLocations.set(normalizedText, location); // Update local map
+            itemLocations.set(normalizedText, location);
 
-            // Add to packing list
             await createPackingListItem(pendingItem, location);
-            
             closeLocationModal();
         }
         
         async function createPackingListItem(text, location) {
             const newItemRef = doc(collection(db, `users/${userId}/packingList`));
-            await setDoc(newItemRef, {
-                text,
-                location,
-                packed: false,
-                createdAt: new Date()
-            });
+            await setDoc(newItemRef, { text, location, packed: false, createdAt: new Date() });
         }
         
         function closeLocationModal() {
@@ -273,7 +331,7 @@
         }
 
         async function handleResetList() {
-            if (!confirm("Start a new trip? This will un-pack all items on your list.")) return;
+            if (!confirm("Start a new trip? This will un-pack all items.")) return;
             
             const batch = writeBatch(db);
             packingList.forEach(item => {
@@ -284,6 +342,18 @@
             });
             await batch.commit();
         }
+        
+        // --- THEME TOGGLE ---
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            const isDark = document.documentElement.classList.contains('dark');
+            themeToggleBtn.querySelector('span').textContent = isDark ? 'light_mode' : 'dark_mode';
+        }
 
         // --- EVENT LISTENERS ---
         addItemForm.addEventListener('submit', handleAddItem);
@@ -291,6 +361,10 @@
         cancelLocationBtn.addEventListener('click', closeLocationModal);
         itemListEl.addEventListener('click', handleItemListClick);
         resetListBtn.addEventListener('click', handleResetList);
+        themeToggleBtn.addEventListener('click', toggleTheme);
+        
+        // --- INITIALIZE ---
+        updateThemeIcon();
 
     </script>
 </body>
