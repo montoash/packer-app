@@ -58,6 +58,9 @@
         <header class="p-4 flex justify-between items-center bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700" style="padding-top: calc(1rem + var(--sat));">
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Packing List</h1>
             <div class="flex items-center space-x-2">
+                 <button id="bulk-add-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition-colors">
+                    <span class="material-symbols-outlined text-gray-600 dark:text-gray-300">playlist_add</span>
+                </button>
                  <button id="theme-toggle-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition-colors">
                     <span class="material-symbols-outlined text-gray-600 dark:text-gray-300"></span>
                 </button>
@@ -83,21 +86,47 @@
         </form>
     </div>
 
-    <!-- Location Modal -->
-    <div id="location-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-40 hidden backdrop-blur-sm">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-sm">
-            <h2 class="text-lg font-bold text-gray-900 dark:text-white">Set Location</h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Where do you get "<span id="modal-item-name" class="font-semibold"></span>"?</p>
-            
-            <div id="location-suggestions" class="flex flex-wrap gap-2 mt-4">
-                <!-- Location suggestions will be injected here -->
+    <!-- Modals Container -->
+    <div id="modals-container">
+        <!-- Location Modal -->
+        <div id="location-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-40 hidden backdrop-blur-sm">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-sm">
+                <h2 class="text-lg font-bold text-gray-900 dark:text-white">Set Location</h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Where do you get "<span id="modal-item-name" class="font-semibold"></span>"?</p>
+                <div id="location-suggestions" class="flex flex-wrap gap-2 mt-4"></div>
+                <form id="location-form">
+                    <input type="text" id="location-input" placeholder="Or type a new location" class="w-full mt-4 px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-gray-900 dark:text-white">
+                    <div class="flex justify-end space-x-2 mt-4">
+                        <button type="button" id="cancel-location-btn" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
+                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">Save</button>
+                    </div>
+                </form>
             </div>
-            
-            <form id="location-form">
-                <input type="text" id="location-input" placeholder="Or type a new location" class="w-full mt-4 px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-gray-900 dark:text-white">
+        </div>
+
+        <!-- Bulk Add Modal -->
+        <div id="bulk-add-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-40 hidden backdrop-blur-sm">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-sm">
+                <h2 class="text-lg font-bold text-gray-900 dark:text-white">Bulk Add Items</h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Paste your list below, one item per line.</p>
+                <form id="bulk-add-form">
+                    <textarea id="bulk-items-input" rows="8" class="w-full mt-4 p-3 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-gray-900 dark:text-white"></textarea>
+                    <div class="flex justify-end space-x-2 mt-4">
+                        <button type="button" id="cancel-bulk-add-btn" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
+                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">Add Items</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Duplicate Alert Modal -->
+        <div id="duplicate-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-40 hidden backdrop-blur-sm">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-sm">
+                <h2 class="text-lg font-bold text-yellow-500 dark:text-yellow-400">Potential Duplicate</h2>
+                <p id="duplicate-message" class="text-sm text-gray-600 dark:text-gray-400 mt-1"></p>
                 <div class="flex justify-end space-x-2 mt-4">
-                    <button type="button" id="cancel-location-btn" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">Save</button>
+                    <button type="button" id="cancel-duplicate-btn" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
+                    <button type="button" id="add-anyway-btn" class="px-4 py-2 text-sm font-medium text-white bg-yellow-500 rounded-lg hover:bg-yellow-600">Add Anyway</button>
                 </div>
             </form>
         </div>
@@ -128,16 +157,17 @@
         let userId;
         let itemLocations = new Map(); 
         let packingList = [];
+        let locationQueue = [];
         let unsubItemLocations, unsubPackingList;
 
         const loadingScreen = document.getElementById('loading-screen');
-        const loadingMessage = document.getElementById('loading-message');
         const appContainer = document.getElementById('app-container');
         const itemListEl = document.getElementById('item-list');
         const addItemForm = document.getElementById('add-item-form');
         const itemInput = document.getElementById('item-input');
         const resetListBtn = document.getElementById('reset-list-btn');
         const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const bulkAddBtn = document.getElementById('bulk-add-btn');
         
         const locationModal = document.getElementById('location-modal');
         const locationForm = document.getElementById('location-form');
@@ -147,17 +177,23 @@
         const locationSuggestions = document.getElementById('location-suggestions');
         let pendingItem = null;
 
+        const bulkAddModal = document.getElementById('bulk-add-modal');
+        const bulkAddForm = document.getElementById('bulk-add-form');
+        const bulkItemsInput = document.getElementById('bulk-items-input');
+        const cancelBulkAddBtn = document.getElementById('cancel-bulk-add-btn');
+
+        const duplicateModal = document.getElementById('duplicate-modal');
+        const duplicateMessage = document.getElementById('duplicate-message');
+        const cancelDuplicateBtn = document.getElementById('cancel-duplicate-btn');
+        const addAnywayBtn = document.getElementById('add-anyway-btn');
+
         // --- AUTHENTICATION ---
         onAuthStateChanged(auth, user => {
             if (user) {
                 userId = user.uid;
-                loadingMessage.textContent = 'Loading your data...';
                 setupListeners();
             } else {
-                signInAnonymously(auth).catch(error => {
-                    console.error("Anonymous sign-in failed:", error);
-                    loadingMessage.textContent = 'Authentication failed. Please refresh.';
-                });
+                signInAnonymously(auth).catch(error => console.error("Anonymous sign-in failed:", error));
             }
         });
 
@@ -193,7 +229,6 @@
                 return;
             }
 
-            // Render unpacked items
             const groupedByLocation = unpacked.reduce((acc, item) => {
                 const location = item.location || 'Uncategorized';
                 if (!acc[location]) acc[location] = [];
@@ -207,17 +242,13 @@
                 itemListEl.appendChild(locationContainer);
             });
 
-            // Render packed items
             if (packed.length > 0) {
                 const packedContainer = createGroupContainer('Packed', packed, true);
                 itemListEl.appendChild(packedContainer);
             }
             
-            // Animate new items
             document.querySelectorAll('.list-enter').forEach((el, index) => {
-                setTimeout(() => {
-                    el.classList.add('list-enter-active');
-                }, index * 30);
+                setTimeout(() => el.classList.add('list-enter-active'), index * 30);
             });
         }
 
@@ -226,27 +257,18 @@
             const itemsHtml = items.map(item => createItemElement(item)).join('');
             const titleColor = isPacked ? 'text-green-500 dark:text-green-400' : 'text-gray-500 dark:text-gray-400';
             const icon = isPacked ? 'task_alt' : 'pin_drop';
-
-            container.innerHTML = `
-                <h2 class="flex items-center text-sm font-semibold ${titleColor} uppercase tracking-wider mb-2 px-1">
-                    <span class="material-symbols-outlined mr-2" style="font-size: 16px;">${icon}</span>
-                    ${title}
-                </h2>
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-                    ${itemsHtml}
-                </div>
-            `;
+            container.innerHTML = `<h2 class="flex items-center text-sm font-semibold ${titleColor} uppercase tracking-wider mb-2 px-1">
+                <span class="material-symbols-outlined mr-2" style="font-size: 16px;">${icon}</span>${title}</h2>
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">${itemsHtml}</div>`;
             return container;
         }
 
         function createItemElement(item) {
-            const checked = item.packed ? 'checked' : '';
             const textClass = item.packed ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-gray-200';
             const checkboxClass = item.packed ? 'border-green-500 text-green-500' : 'border-gray-300 dark:border-gray-600 text-indigo-600';
             return `<div class="task-item flex items-center p-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0 list-enter" data-id="${item.id}">
-                <input type="checkbox" ${checked} class="item-checkbox h-5 w-5 rounded-full ${checkboxClass} focus:ring-indigo-500 bg-transparent transition-colors">
-                <p class="flex-grow ml-3 ${textClass}">${item.text}</p>
-            </div>`;
+                <input type="checkbox" ${item.packed ? 'checked' : ''} class="item-checkbox h-5 w-5 rounded-full ${checkboxClass} focus:ring-indigo-500 bg-transparent transition-colors">
+                <p class="flex-grow ml-3 ${textClass}">${item.text}</p></div>`;
         }
 
         function showApp() {
@@ -262,13 +284,32 @@
             e.preventDefault();
             const text = itemInput.value.trim();
             if (!text) return;
-            itemInput.value = '';
             
+            const check = findSimilarItem(text);
+            if (check.isDuplicate) {
+                duplicateMessage.innerHTML = `This item is already on your list in the <strong>${check.item.location}</strong> category.`;
+                addAnywayBtn.onclick = () => {
+                    closeDuplicateModal();
+                    promptForLocationIfNeeded(text);
+                };
+                duplicateModal.classList.remove('hidden');
+            } else if (check.isSimilar) {
+                duplicateMessage.innerHTML = `This is similar to "<strong>${check.item.text}</strong>" in your list. Add it anyway?`;
+                addAnywayBtn.onclick = () => {
+                    closeDuplicateModal();
+                    promptForLocationIfNeeded(text);
+                };
+                duplicateModal.classList.remove('hidden');
+            } else {
+                itemInput.value = '';
+                promptForLocationIfNeeded(text);
+            }
+        }
+
+        async function promptForLocationIfNeeded(text) {
             const normalizedText = text.toLowerCase();
-            
             if (itemLocations.has(normalizedText)) {
-                const location = itemLocations.get(normalizedText);
-                await createPackingListItem(text, location);
+                await createPackingListItem(text, itemLocations.get(normalizedText));
             } else {
                 pendingItem = text;
                 modalItemName.textContent = text;
@@ -280,15 +321,14 @@
 
         function renderLocationSuggestions() {
             locationSuggestions.innerHTML = '';
-            const uniqueLocations = [...new Set(itemLocations.values())];
-            uniqueLocations.sort().forEach(loc => {
+            [...new Set(itemLocations.values())].sort().forEach(loc => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.textContent = loc;
                 btn.className = 'location-suggestion px-3 py-1 bg-indigo-600 text-white text-sm rounded-full transition';
                 btn.onclick = () => {
                     locationInput.value = loc;
-                    locationForm.requestSubmit(); // Submit the form
+                    locationForm.requestSubmit();
                 };
                 locationSuggestions.appendChild(btn);
             });
@@ -306,9 +346,12 @@
 
             await createPackingListItem(pendingItem, location);
             closeLocationModal();
+            
+            setTimeout(processLocationQueue, 100);
         }
         
         async function createPackingListItem(text, location) {
+            itemInput.value = '';
             const newItemRef = doc(collection(db, `users/${userId}/packingList`));
             await setDoc(newItemRef, { text, location, packed: false, createdAt: new Date() });
         }
@@ -322,17 +365,14 @@
         async function handleItemListClick(e) {
             const itemEl = e.target.closest('.task-item');
             if (!itemEl) return;
-            
             const itemId = itemEl.dataset.id;
             const item = packingList.find(i => i.id === itemId);
-            
             const itemRef = doc(db, `users/${userId}/packingList`, itemId);
             await setDoc(itemRef, { packed: !item.packed }, { merge: true });
         }
 
         async function handleResetList() {
             if (!confirm("Start a new trip? This will un-pack all items.")) return;
-            
             const batch = writeBatch(db);
             packingList.forEach(item => {
                 if (item.packed) {
@@ -341,6 +381,79 @@
                 }
             });
             await batch.commit();
+        }
+
+        // --- BULK ADD LOGIC ---
+        async function handleBulkAdd(e) {
+            e.preventDefault();
+            const text = bulkItemsInput.value.trim();
+            if (!text) return;
+            
+            const items = text.split('\n').map(s => s.trim()).filter(Boolean);
+            const batch = writeBatch(db);
+            
+            items.forEach(item => {
+                const normalizedText = item.toLowerCase();
+                if (itemLocations.has(normalizedText)) {
+                    const newItemRef = doc(collection(db, `users/${userId}/packingList`));
+                    batch.set(newItemRef, { text: item, location: itemLocations.get(normalizedText), packed: false, createdAt: new Date() });
+                } else {
+                    if (!locationQueue.includes(item)) locationQueue.push(item);
+                }
+            });
+
+            await batch.commit();
+            closeBulkAddModal();
+            processLocationQueue();
+        }
+
+        function processLocationQueue() {
+            if (locationQueue.length > 0) {
+                const nextItem = locationQueue.shift();
+                promptForLocationIfNeeded(nextItem);
+            }
+        }
+
+        function closeBulkAddModal() {
+            bulkAddModal.classList.add('hidden');
+            bulkItemsInput.value = '';
+        }
+
+        // --- DUPLICATE CHECK LOGIC ---
+        function findSimilarItem(newItemText) {
+            const normalizedNewItem = newItemText.toLowerCase().trim();
+            for (const item of packingList) {
+                const normalizedExistingItem = item.text.toLowerCase().trim();
+                if (normalizedNewItem === normalizedExistingItem) {
+                    return { isDuplicate: true, isSimilar: false, item };
+                }
+                const distance = getLevenshteinDistance(normalizedNewItem, normalizedExistingItem);
+                if (distance <= 2 && distance > 0) {
+                    return { isDuplicate: false, isSimilar: true, item };
+                }
+            }
+            return { isDuplicate: false, isSimilar: false, item: null };
+        }
+
+        function getLevenshteinDistance(a, b) {
+            const matrix = Array(b.length + 1).fill(null).map(() => Array(a.length + 1).fill(null));
+            for (let i = 0; i <= a.length; i += 1) matrix[0][i] = i;
+            for (let j = 0; j <= b.length; j += 1) matrix[j][0] = j;
+            for (let j = 1; j <= b.length; j += 1) {
+                for (let i = 1; i <= a.length; i += 1) {
+                    const indicator = a[i - 1] === b[j - 1] ? 0 : 1;
+                    matrix[j][i] = Math.min(
+                        matrix[j][i - 1] + 1,
+                        matrix[j - 1][i] + 1,
+                        matrix[j - 1][i - 1] + indicator,
+                    );
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        function closeDuplicateModal() {
+            duplicateModal.classList.add('hidden');
         }
         
         // --- THEME TOGGLE ---
@@ -362,6 +475,10 @@
         itemListEl.addEventListener('click', handleItemListClick);
         resetListBtn.addEventListener('click', handleResetList);
         themeToggleBtn.addEventListener('click', toggleTheme);
+        bulkAddBtn.addEventListener('click', () => bulkAddModal.classList.remove('hidden'));
+        cancelBulkAddBtn.addEventListener('click', closeBulkAddModal);
+        bulkAddForm.addEventListener('submit', handleBulkAdd);
+        cancelDuplicateBtn.addEventListener('click', closeDuplicateModal);
         
         // --- INITIALIZE ---
         updateThemeIcon();
