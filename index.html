@@ -28,11 +28,14 @@
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
         #app-container { padding-bottom: calc(6rem + var(--sab)); }
         #add-item-form-container { padding-bottom: calc(1rem + var(--sab)); }
-        .task-item { transition: background-color 0.2s, transform 0.2s; }
-        .task-item:active { transform: scale(0.98); @apply bg-gray-100 dark:bg-gray-700; }
-        .location-suggestion:active { @apply bg-indigo-700; }
         .list-enter { opacity: 0; transform: translateY(10px); }
         .list-enter-active { opacity: 1; transform: translateY(0); transition: opacity 300ms, transform 300ms; }
+        
+        .task-item-wrapper { position: relative; overflow: hidden; }
+        .task-item { transition: transform 0.3s ease; will-change: transform; }
+        .delete-action { position: absolute; top: 0; right: 0; bottom: 0; width: 80px; display: flex; align-items: center; justify-content: center; background-color: #ef4444; color: white; transform: translateX(100%); transition: transform 0.3s ease; }
+        .task-item.is-swiped { transform: translateX(-80px); }
+        .task-item.is-swiped + .delete-action { transform: translateX(0); }
     </style>
     <script>
         // Set theme on initial load
@@ -88,55 +91,14 @@
 
     <!-- Modals Container -->
     <div id="modals-container">
-        <!-- Location Modal -->
-        <div id="location-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-40 hidden backdrop-blur-sm">
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-sm">
-                <h2 class="text-lg font-bold text-gray-900 dark:text-white">Set Location</h2>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Where do you get "<span id="modal-item-name" class="font-semibold"></span>"?</p>
-                <div id="location-suggestions" class="flex flex-wrap gap-2 mt-4"></div>
-                <form id="location-form">
-                    <input type="text" id="location-input" placeholder="Or type a new location" class="w-full mt-4 px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-gray-900 dark:text-white">
-                    <div class="flex justify-end space-x-2 mt-4">
-                        <button type="button" id="cancel-location-btn" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
-                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">Save</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Bulk Add Modal -->
-        <div id="bulk-add-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-40 hidden backdrop-blur-sm">
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-sm">
-                <h2 class="text-lg font-bold text-gray-900 dark:text-white">Bulk Add Items</h2>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Paste your list below, one item per line.</p>
-                <form id="bulk-add-form">
-                    <textarea id="bulk-items-input" rows="8" class="w-full mt-4 p-3 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-gray-900 dark:text-white"></textarea>
-                    <div class="flex justify-end space-x-2 mt-4">
-                        <button type="button" id="cancel-bulk-add-btn" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
-                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">Add Items</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Duplicate Alert Modal -->
-        <div id="duplicate-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-40 hidden backdrop-blur-sm">
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-sm">
-                <h2 class="text-lg font-bold text-yellow-500 dark:text-yellow-400">Potential Duplicate</h2>
-                <p id="duplicate-message" class="text-sm text-gray-600 dark:text-gray-400 mt-1"></p>
-                <div class="flex justify-end space-x-2 mt-4">
-                    <button type="button" id="cancel-duplicate-btn" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
-                    <button type="button" id="add-anyway-btn" class="px-4 py-2 text-sm font-medium text-white bg-yellow-500 rounded-lg hover:bg-yellow-600">Add Anyway</button>
-                </div>
-            </form>
-        </div>
+        <!-- Location, Edit, Bulk, and Duplicate modals will be here -->
     </div>
 
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, onSnapshot, query, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot, query, writeBatch, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         // --- PASTE YOUR FIREBASE CONFIG HERE ---
         const firebaseConfig = {
@@ -168,25 +130,8 @@
         const resetListBtn = document.getElementById('reset-list-btn');
         const themeToggleBtn = document.getElementById('theme-toggle-btn');
         const bulkAddBtn = document.getElementById('bulk-add-btn');
+        const modalsContainer = document.getElementById('modals-container');
         
-        const locationModal = document.getElementById('location-modal');
-        const locationForm = document.getElementById('location-form');
-        const locationInput = document.getElementById('location-input');
-        const cancelLocationBtn = document.getElementById('cancel-location-btn');
-        const modalItemName = document.getElementById('modal-item-name');
-        const locationSuggestions = document.getElementById('location-suggestions');
-        let pendingItem = null;
-
-        const bulkAddModal = document.getElementById('bulk-add-modal');
-        const bulkAddForm = document.getElementById('bulk-add-form');
-        const bulkItemsInput = document.getElementById('bulk-items-input');
-        const cancelBulkAddBtn = document.getElementById('cancel-bulk-add-btn');
-
-        const duplicateModal = document.getElementById('duplicate-modal');
-        const duplicateMessage = document.getElementById('duplicate-message');
-        const cancelDuplicateBtn = document.getElementById('cancel-duplicate-btn');
-        const addAnywayBtn = document.getElementById('add-anyway-btn');
-
         // --- AUTHENTICATION ---
         onAuthStateChanged(auth, user => {
             if (user) {
@@ -201,6 +146,7 @@
         function setupListeners() {
             const itemLocationsRef = collection(db, `users/${userId}/itemLocations`);
             unsubItemLocations = onSnapshot(itemLocationsRef, (snapshot) => {
+                itemLocations.clear();
                 snapshot.docs.forEach(doc => itemLocations.set(doc.id, doc.data().location));
                 if (!unsubPackingList) setupPackingListListener();
             });
@@ -215,7 +161,7 @@
             });
         }
         
-        // --- RENDERING ---
+        // --- RENDERING & UI ---
         function renderPackingList() {
             itemListEl.innerHTML = '';
             const unpacked = packingList.filter(item => !item.packed);
@@ -266,9 +212,13 @@
         function createItemElement(item) {
             const textClass = item.packed ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-gray-200';
             const checkboxClass = item.packed ? 'border-green-500 text-green-500' : 'border-gray-300 dark:border-gray-600 text-indigo-600';
-            return `<div class="task-item flex items-center p-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0 list-enter" data-id="${item.id}">
-                <input type="checkbox" ${item.packed ? 'checked' : ''} class="item-checkbox h-5 w-5 rounded-full ${checkboxClass} focus:ring-indigo-500 bg-transparent transition-colors">
-                <p class="flex-grow ml-3 ${textClass}">${item.text}</p></div>`;
+            return `<div class="task-item-wrapper border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                <div class="task-item flex items-center p-3 bg-white dark:bg-gray-800" data-id="${item.id}">
+                    <input type="checkbox" ${item.packed ? 'checked' : ''} class="item-checkbox h-5 w-5 rounded-full ${checkboxClass} focus:ring-indigo-500 bg-transparent transition-colors">
+                    <p class="item-text flex-grow ml-3 ${textClass}">${item.text}</p>
+                </div>
+                <div class="delete-action"><button class="delete-btn"><span class="material-symbols-outlined">delete</span></button></div>
+            </div>`;
         }
 
         function showApp() {
@@ -278,8 +228,30 @@
                 setTimeout(() => loadingScreen.style.display = 'none', 500);
             }
         }
+        
+        // --- MODAL HANDLING ---
+        function createModal(id, title, content, formId, buttons) {
+            const modal = document.createElement('div');
+            modal.id = id;
+            modal.className = "fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-40 hidden backdrop-blur-sm";
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-sm">
+                    <h2 class="text-lg font-bold text-gray-900 dark:text-white">${title}</h2>
+                    ${content}
+                    <form id="${formId}">
+                        <div class="flex justify-end space-x-2 mt-4">
+                            ${buttons}
+                        </div>
+                    </form>
+                </div>`;
+            modalsContainer.appendChild(modal);
+            return modal;
+        }
 
-        // --- CORE LOGIC ---
+        function showModal(id) { document.getElementById(id)?.classList.remove('hidden'); }
+        function hideModal(id) { document.getElementById(id)?.classList.add('hidden'); }
+
+        // --- CORE LOGIC & EVENT HANDLING ---
         async function handleAddItem(e) {
             e.preventDefault();
             const text = itemInput.value.trim();
@@ -287,19 +259,9 @@
             
             const check = findSimilarItem(text);
             if (check.isDuplicate) {
-                duplicateMessage.innerHTML = `This item is already on your list in the <strong>${check.item.location}</strong> category.`;
-                addAnywayBtn.onclick = () => {
-                    closeDuplicateModal();
-                    promptForLocationIfNeeded(text);
-                };
-                duplicateModal.classList.remove('hidden');
+                showDuplicateModal(`This item is already on your list in the <strong>${check.item.location}</strong> category.`, () => promptForLocationIfNeeded(text));
             } else if (check.isSimilar) {
-                duplicateMessage.innerHTML = `This is similar to "<strong>${check.item.text}</strong>" in your list. Add it anyway?`;
-                addAnywayBtn.onclick = () => {
-                    closeDuplicateModal();
-                    promptForLocationIfNeeded(text);
-                };
-                duplicateModal.classList.remove('hidden');
+                showDuplicateModal(`This is similar to "<strong>${check.item.text}</strong>" in your list. Add it anyway?`, () => promptForLocationIfNeeded(text));
             } else {
                 itemInput.value = '';
                 promptForLocationIfNeeded(text);
@@ -311,43 +273,8 @@
             if (itemLocations.has(normalizedText)) {
                 await createPackingListItem(text, itemLocations.get(normalizedText));
             } else {
-                pendingItem = text;
-                modalItemName.textContent = text;
-                renderLocationSuggestions();
-                locationModal.classList.remove('hidden');
-                locationInput.focus();
+                showLocationModal(text);
             }
-        }
-
-        function renderLocationSuggestions() {
-            locationSuggestions.innerHTML = '';
-            [...new Set(itemLocations.values())].sort().forEach(loc => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.textContent = loc;
-                btn.className = 'location-suggestion px-3 py-1 bg-indigo-600 text-white text-sm rounded-full transition';
-                btn.onclick = () => {
-                    locationInput.value = loc;
-                    locationForm.requestSubmit();
-                };
-                locationSuggestions.appendChild(btn);
-            });
-        }
-
-        async function handleLocationSubmit(e) {
-            e.preventDefault();
-            const location = locationInput.value.trim();
-            if (!location || !pendingItem) return;
-
-            const normalizedText = pendingItem.toLowerCase();
-            const itemLocationRef = doc(db, `users/${userId}/itemLocations`, normalizedText);
-            await setDoc(itemLocationRef, { location });
-            itemLocations.set(normalizedText, location);
-
-            await createPackingListItem(pendingItem, location);
-            closeLocationModal();
-            
-            setTimeout(processLocationQueue, 100);
         }
         
         async function createPackingListItem(text, location) {
@@ -356,21 +283,6 @@
             await setDoc(newItemRef, { text, location, packed: false, createdAt: new Date() });
         }
         
-        function closeLocationModal() {
-            locationModal.classList.add('hidden');
-            locationInput.value = '';
-            pendingItem = null;
-        }
-
-        async function handleItemListClick(e) {
-            const itemEl = e.target.closest('.task-item');
-            if (!itemEl) return;
-            const itemId = itemEl.dataset.id;
-            const item = packingList.find(i => i.id === itemId);
-            const itemRef = doc(db, `users/${userId}/packingList`, itemId);
-            await setDoc(itemRef, { packed: !item.packed }, { merge: true });
-        }
-
         async function handleResetList() {
             if (!confirm("Start a new trip? This will un-pack all items.")) return;
             const batch = writeBatch(db);
@@ -381,42 +293,6 @@
                 }
             });
             await batch.commit();
-        }
-
-        // --- BULK ADD LOGIC ---
-        async function handleBulkAdd(e) {
-            e.preventDefault();
-            const text = bulkItemsInput.value.trim();
-            if (!text) return;
-            
-            const items = text.split('\n').map(s => s.trim()).filter(Boolean);
-            const batch = writeBatch(db);
-            
-            items.forEach(item => {
-                const normalizedText = item.toLowerCase();
-                if (itemLocations.has(normalizedText)) {
-                    const newItemRef = doc(collection(db, `users/${userId}/packingList`));
-                    batch.set(newItemRef, { text: item, location: itemLocations.get(normalizedText), packed: false, createdAt: new Date() });
-                } else {
-                    if (!locationQueue.includes(item)) locationQueue.push(item);
-                }
-            });
-
-            await batch.commit();
-            closeBulkAddModal();
-            processLocationQueue();
-        }
-
-        function processLocationQueue() {
-            if (locationQueue.length > 0) {
-                const nextItem = locationQueue.shift();
-                promptForLocationIfNeeded(nextItem);
-            }
-        }
-
-        function closeBulkAddModal() {
-            bulkAddModal.classList.add('hidden');
-            bulkItemsInput.value = '';
         }
 
         // --- DUPLICATE CHECK LOGIC ---
@@ -442,18 +318,10 @@
             for (let j = 1; j <= b.length; j += 1) {
                 for (let i = 1; i <= a.length; i += 1) {
                     const indicator = a[i - 1] === b[j - 1] ? 0 : 1;
-                    matrix[j][i] = Math.min(
-                        matrix[j][i - 1] + 1,
-                        matrix[j - 1][i] + 1,
-                        matrix[j - 1][i - 1] + indicator,
-                    );
+                    matrix[j][i] = Math.min(matrix[j][i - 1] + 1, matrix[j - 1][i] + 1, matrix[j - 1][i - 1] + indicator);
                 }
             }
             return matrix[b.length][a.length];
-        }
-
-        function closeDuplicateModal() {
-            duplicateModal.classList.add('hidden');
         }
         
         // --- THEME TOGGLE ---
@@ -468,19 +336,236 @@
             themeToggleBtn.querySelector('span').textContent = isDark ? 'light_mode' : 'dark_mode';
         }
 
+        // --- EVENT DELEGATION & SWIPE LOGIC ---
+        let swipeState = { startX: 0, currentX: 0, target: null, isSwiping: false };
+
+        function handleTouchStart(e) {
+            const target = e.target.closest('.task-item');
+            if (!target) return;
+            
+            // Close any other swiped item
+            const currentlySwiped = document.querySelector('.task-item.is-swiped');
+            if (currentlySwiped && currentlySwiped !== target) {
+                currentlySwiped.classList.remove('is-swiped');
+            }
+            
+            swipeState.target = target;
+            swipeState.startX = e.touches[0].clientX;
+            swipeState.isSwiping = true;
+            target.style.transition = 'none'; // Disable transition while swiping
+        }
+
+        function handleTouchMove(e) {
+            if (!swipeState.isSwiping || !swipeState.target) return;
+            swipeState.currentX = e.touches[0].clientX;
+            let diff = swipeState.currentX - swipeState.startX;
+            if (diff > 0) diff = 0; // Only allow left swipe
+            if (diff < -90) diff = -90; // Cap the swipe distance
+            
+            swipeState.target.style.transform = `translateX(${diff}px)`;
+        }
+
+        function handleTouchEnd(e) {
+            if (!swipeState.isSwiping || !swipeState.target) return;
+            
+            swipeState.target.style.transition = 'transform 0.3s ease';
+            let diff = swipeState.currentX - swipeState.startX;
+            
+            if (diff < -40) { // Threshold to snap open
+                swipeState.target.classList.add('is-swiped');
+                swipeState.target.style.transform = ''; // Let CSS handle the final position
+            } else {
+                swipeState.target.classList.remove('is-swiped');
+                swipeState.target.style.transform = '';
+            }
+            
+            // Reset state
+            swipeState = { startX: 0, currentX: 0, target: null, isSwiping: false };
+        }
+
+        async function handleListInteraction(e) {
+            const target = e.target;
+            const itemWrapper = target.closest('.task-item-wrapper');
+            if (!itemWrapper) return;
+            const taskItemEl = itemWrapper.querySelector('.task-item');
+            const itemId = taskItemEl.dataset.id;
+            const item = packingList.find(i => i.id === itemId);
+
+            if (target.classList.contains('item-checkbox')) {
+                const itemRef = doc(db, `users/${userId}/packingList`, itemId);
+                await setDoc(itemRef, { packed: !item.packed }, { merge: true });
+            } else if (target.classList.contains('delete-btn')) {
+                if (confirm(`Are you sure you want to delete "${item.text}"?`)) {
+                    await deleteDoc(doc(db, `users/${userId}/packingList`, itemId));
+                }
+            } else if (target.classList.contains('item-text')) {
+                showEditModal(item);
+            }
+        }
+        
+        // --- MODAL CREATION & LOGIC ---
+        function initializeModals() {
+            // Location Modal
+            const locationModalEl = createModal('location-modal', 'Set Location', 
+                `<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Where do you get "<span id="location-modal-item-name" class="font-semibold"></span>"?</p>
+                 <div id="location-modal-suggestions" class="flex flex-wrap gap-2 mt-4"></div>
+                 <input type="text" id="location-modal-input" placeholder="Or type a new location" class="w-full mt-4 px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-gray-900 dark:text-white">`,
+                'location-modal-form',
+                `<button type="button" class="cancel-btn px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
+                 <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">Save</button>`
+            );
+            locationModalEl.querySelector('.cancel-btn').onclick = () => hideModal('location-modal');
+            locationModalEl.querySelector('form').onsubmit = handleLocationSubmit;
+
+            // Edit Modal
+            const editModalEl = createModal('edit-modal', 'Edit Item',
+                `<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Update the item's name and location.</p>
+                 <input type="text" id="edit-modal-name-input" class="w-full mt-4 px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-gray-900 dark:text-white">
+                 <div id="edit-modal-suggestions" class="flex flex-wrap gap-2 mt-4"></div>
+                 <input type="text" id="edit-modal-location-input" placeholder="New location" class="w-full mt-4 px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-gray-900 dark:text-white">`,
+                'edit-modal-form',
+                `<button type="button" class="cancel-btn px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
+                 <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">Save Changes</button>`
+            );
+            editModalEl.querySelector('.cancel-btn').onclick = () => hideModal('edit-modal');
+
+            // Bulk Add Modal
+            const bulkAddModalEl = createModal('bulk-add-modal', 'Bulk Add Items',
+                `<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Paste your list below, one item per line.</p>
+                 <textarea id="bulk-items-input" rows="8" class="w-full mt-4 p-3 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-gray-900 dark:text-white"></textarea>`,
+                'bulk-add-form',
+                `<button type="button" class="cancel-btn px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
+                 <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">Add Items</button>`
+            );
+            bulkAddModalEl.querySelector('.cancel-btn').onclick = () => hideModal('bulk-add-modal');
+            bulkAddModalEl.querySelector('form').onsubmit = handleBulkAdd;
+
+            // Duplicate Modal
+            const duplicateModalEl = createModal('duplicate-modal', '<span class="text-yellow-500 dark:text-yellow-400">Potential Duplicate</span>',
+                `<p id="duplicate-message" class="text-sm text-gray-600 dark:text-gray-400 mt-1"></p>`,
+                'duplicate-modal-form',
+                `<button type="button" class="cancel-btn px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
+                 <button type="button" id="add-anyway-btn" class="px-4 py-2 text-sm font-medium text-white bg-yellow-500 rounded-lg hover:bg-yellow-600">Add Anyway</button>`
+            );
+            duplicateModalEl.querySelector('.cancel-btn').onclick = () => hideModal('duplicate-modal');
+        }
+
+        function showLocationModal(itemName) {
+            document.getElementById('location-modal-item-name').textContent = itemName;
+            renderLocationSuggestions('location-modal-suggestions', 'location-modal-input');
+            showModal('location-modal');
+            document.getElementById('location-modal-input').focus();
+            pendingItem = itemName;
+        }
+
+        async function handleLocationSubmit(e) {
+            e.preventDefault();
+            const location = document.getElementById('location-modal-input').value.trim();
+            if (!location || !pendingItem) return;
+            const normalizedText = pendingItem.toLowerCase();
+            const itemLocationRef = doc(db, `users/${userId}/itemLocations`, normalizedText);
+            await setDoc(itemLocationRef, { location });
+            await createPackingListItem(pendingItem, location);
+            hideModal('location-modal');
+            setTimeout(processLocationQueue, 100);
+        }
+
+        function showEditModal(item) {
+            const nameInput = document.getElementById('edit-modal-name-input');
+            const locationInput = document.getElementById('edit-modal-location-input');
+            nameInput.value = item.text;
+            locationInput.value = item.location;
+            renderLocationSuggestions('edit-modal-suggestions', 'edit-modal-location-input');
+            showModal('edit-modal');
+            document.getElementById('edit-modal-form').onsubmit = (e) => handleEditSubmit(e, item.id);
+        }
+
+        async function handleEditSubmit(e, itemId) {
+            e.preventDefault();
+            const newName = document.getElementById('edit-modal-name-input').value.trim();
+            const newLocation = document.getElementById('edit-modal-location-input').value.trim();
+            if (!newName || !newLocation) return;
+            
+            const itemRef = doc(db, `users/${userId}/packingList`, itemId);
+            await setDoc(itemRef, { text: newName, location: newLocation }, { merge: true });
+            
+            // Update master location list
+            const normalizedNewName = newName.toLowerCase();
+            if (!itemLocations.has(normalizedNewName) || itemLocations.get(normalizedNewName) !== newLocation) {
+                 const itemLocationRef = doc(db, `users/${userId}/itemLocations`, normalizedNewName);
+                 await setDoc(itemLocationRef, { location: newLocation });
+            }
+            hideModal('edit-modal');
+        }
+
+        function showBulkAddModal() {
+            showModal('bulk-add-modal');
+            document.getElementById('bulk-items-input').value = '';
+        }
+
+        async function handleBulkAdd(e) {
+            e.preventDefault();
+            const text = document.getElementById('bulk-items-input').value.trim();
+            if (!text) return;
+            const items = text.split('\n').map(s => s.trim()).filter(Boolean);
+            const batch = writeBatch(db);
+            items.forEach(item => {
+                const normalizedText = item.toLowerCase();
+                if (itemLocations.has(normalizedText)) {
+                    const newItemRef = doc(collection(db, `users/${userId}/packingList`));
+                    batch.set(newItemRef, { text: item, location: itemLocations.get(normalizedText), packed: false, createdAt: new Date() });
+                } else {
+                    if (!locationQueue.includes(item)) locationQueue.push(item);
+                }
+            });
+            await batch.commit();
+            hideModal('bulk-add-modal');
+            processLocationQueue();
+        }
+        
+        function processLocationQueue() {
+            if (locationQueue.length > 0) {
+                const nextItem = locationQueue.shift();
+                showLocationModal(nextItem);
+            }
+        }
+
+        function showDuplicateModal(message, addAnywayCallback) {
+            document.getElementById('duplicate-message').innerHTML = message;
+            document.getElementById('add-anyway-btn').onclick = () => {
+                hideModal('duplicate-modal');
+                addAnywayCallback();
+            };
+            showModal('duplicate-modal');
+        }
+
+        function renderLocationSuggestions(containerId, inputId) {
+            const container = document.getElementById(containerId);
+            const input = document.getElementById(inputId);
+            container.innerHTML = '';
+            [...new Set(itemLocations.values())].sort().forEach(loc => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = loc;
+                btn.className = 'location-suggestion px-3 py-1 bg-indigo-600 text-white text-sm rounded-full transition';
+                btn.onclick = () => { input.value = loc; };
+                container.appendChild(btn);
+            });
+        }
+
         // --- EVENT LISTENERS ---
         addItemForm.addEventListener('submit', handleAddItem);
-        locationForm.addEventListener('submit', handleLocationSubmit);
-        cancelLocationBtn.addEventListener('click', closeLocationModal);
-        itemListEl.addEventListener('click', handleItemListClick);
         resetListBtn.addEventListener('click', handleResetList);
         themeToggleBtn.addEventListener('click', toggleTheme);
-        bulkAddBtn.addEventListener('click', () => bulkAddModal.classList.remove('hidden'));
-        cancelBulkAddBtn.addEventListener('click', closeBulkAddModal);
-        bulkAddForm.addEventListener('submit', handleBulkAdd);
-        cancelDuplicateBtn.addEventListener('click', closeDuplicateModal);
+        bulkAddBtn.addEventListener('click', showBulkAddModal);
+        
+        itemListEl.addEventListener('click', handleListInteraction);
+        itemListEl.addEventListener('touchstart', handleTouchStart, { passive: true });
+        itemListEl.addEventListener('touchmove', handleTouchMove, { passive: true });
+        itemListEl.addEventListener('touchend', handleTouchEnd, { passive: true });
         
         // --- INITIALIZE ---
+        initializeModals();
         updateThemeIcon();
 
     </script>
